@@ -2,6 +2,25 @@
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 
+class PyDendroSampleListItem(QListWidgetItem):
+
+  def __init__(self, name, model):
+    super(PyDendroSampleListItem, self).__init__(name)
+    self.name = name
+    self.model = model
+    self.update()
+
+  def update(self):
+    sample = self.model.get_sample(self.name)
+
+    if sample.first_year != sample.original_first_year:
+      self.setText(self.name + ' (' + str(sample.first_year-sample.original_first_year) + ')')
+    else:
+      self.setText(self.name)
+      
+
+class PyDendroSampleList(QListWidget):
+  pass
 
 class PyDendroStackView(QDockWidget):
 
@@ -10,6 +29,8 @@ class PyDendroStackView(QDockWidget):
   def __init__(self, ui, model):
 
     super(QDockWidget, self).__init__(ui)
+
+    self.filtered = False
 
     self.ui = ui
     self.model = model
@@ -26,10 +47,9 @@ class PyDendroStackView(QDockWidget):
   def selected_stacks(self):
     return [str(item.text(0)) for item in self.stack_list.selectedItems()]
 
-
   @property
   def selected_samples(self):
-    return [str(item.text()) for item in self.sample_list.selectedItems()]
+    return [item.name for item in self.sample_list.selectedItems()]
 
 
   def set_color(self, color):
@@ -62,10 +82,9 @@ class PyDendroStackView(QDockWidget):
         if not self.model.get_stack(stack).immutable:
           self.destination_combo.addItem(stack)
           
-      # XXX: move this above?
-      stack = self.model.get_stack(stack)
-      state = 2 if stack.frozen else 0
-      self.stack_items[stack.name].setCheckState(1, state)
+#       stack = self.model.get_stack(stack)
+#       state = 2 if stack.frozen else 0
+#       self.stack_items[stack.name].setCheckState(1, state)
 
     self.stacks = new_stacks
 
@@ -77,18 +96,21 @@ class PyDendroStackView(QDockWidget):
     new_samples = set()
 
     for stack in self.selected_stacks:
-      samples = self.model.samples_in_stack(stack)
+      samples = self.filter(self.model.samples_in_stack(stack))
 
       for sample in samples:
         new_samples.add(sample)
         if sample not in old_samples:
-          self.sample_items[sample] = QListWidgetItem(sample)
+          self.sample_items[sample] = PyDendroSampleListItem(sample, self.model)
           self.sample_list.addItem(self.sample_items[sample])
 
     for sample in (old_samples - new_samples):
       self.sample_list.takeItem(self.sample_list.row(self.sample_items[sample]))
-      
+
     self.samples = new_samples
+
+    for name in self.sample_items:
+      self.sample_items[name].update()
 
 
   ##
@@ -100,32 +122,54 @@ class PyDendroStackView(QDockWidget):
     self.ui.on_draw()
 
 
-  def on_stack_changed(self, item, column):
+#   def on_stack_changed(self, item, column):
 
-    # XXX: this gets fired when a new stack window is created, and it messes things up
+#     # XXX: this gets fired when a new stack window is created, and it messes things up
 
-    try:
-      stack = self.model.get_stack(str(item.text(0)))
-      stack.frozen = item.checkState(1) > 0
-    except:
-      pass
+#     try:
+#       stack = self.model.get_stack(str(item.text(0)))
+# #      stack.frozen = item.checkState(1) > 0
+#     except:
+#       pass
 
-    self.ui.update_stacks()
+#     self.ui.update_stacks()
 
 
   def on_sample_selection(self):
     self.ui.on_draw()
-    
+
 
   def on_change_color(self):
     """Change color dialog."""
     
-    #color = QColorDialog.getColor(self.color, self, "Stack color") #, QColorDialog.ShowAlphaChannel)
     color = QColorDialog.getColor(self.color, self, "Stack color", QColorDialog.ShowAlphaChannel)
 
     if QColor.isValid(color):
       self.set_color(color)
       self.ui.on_draw()
+
+  def filter(self, samples):
+    
+    if self.filtered:
+      return list(set(samples) & self._filter)
+
+    return samples
+
+
+  def on_filter(self):
+    """Hold/release action."""
+
+    if self.filtered:
+      self.filtered = False
+      self.filter_button.setText('Hold')
+      self._filter = set()
+    else:
+      self.filtered = True
+      self.filter_button.setText('Release')
+      self._filter = set(self.selected_samples)
+
+    self.update_samples()
+    self.ui.on_draw()
 
 
   def on_commit(self):
@@ -169,12 +213,10 @@ class PyDendroStackView(QDockWidget):
                                   uniformRowHeights=True,
                                   sortingEnabled=True,
                                   )
-    self.stack_list.setSelectionMode(QAbstractItemView.ExtendedSelection)
-    self.stack_list.setColumnCount(2)
-    self.stack_list.setHeaderLabels(['Stack', 'Frozen'])
-    #self.stack_list.setColumnWidth(1, 70)
+    self.stack_list.setSelectionMode(QAbstractItemView.MultiSelection)
+    self.stack_list.setColumnCount(1)
+    self.stack_list.setHeaderLabels(['Stack'])
     self.connect(self.stack_list, SIGNAL('itemSelectionChanged()'), self.on_stack_selection)
-    self.connect(self.stack_list, SIGNAL('itemChanged(QTreeWidgetItem*,int)'), self.on_stack_changed)    
 
     vbox.addWidget(self.stack_list)
 
@@ -203,8 +245,13 @@ class PyDendroStackView(QDockWidget):
     group = QGroupBox("Samples")
     vbox  = QVBoxLayout()
 
+    # filter button
+    self.filter_button = QPushButton("Hold")
+    vbox.addWidget(self.filter_button)
+    self.connect(self.filter_button, SIGNAL("clicked()"), self.on_filter)
+
     # sample list
-    self.sample_list = QListWidget()
+    self.sample_list = PyDendroSampleList()    
     self.sample_list.setSelectionMode(QAbstractItemView.ExtendedSelection)
     self.sample_list.setSortingEnabled(True)
     self.connect(self.sample_list, SIGNAL('itemSelectionChanged()'), self.on_sample_selection)

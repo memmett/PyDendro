@@ -40,17 +40,19 @@ def read(filename):
 def write(filename, samples, digits=4):
   """Write samples..."""
 
+  # XXX: sorting
+
   with open(filename, 'w') as f:
     for name, fyog, rws in samples:
 
-      rws = rws + [ -9999.0/10.0**(digits-1) ] # append marker year
+      # append marker year
+      rws = rws + [ -9999.0/10.0**(digits-1) ]
 
       line = "%-6s  %4d" % (name, fyog)
       for i, year in enumerate(range(fyog, fyog+len(rws))):
-        if year % 10 == 0:
-          f.write(line + "\r\n")
-          line = "%-6s  %4d" % (name, year)
-
         line += "%6d" % int(round(rws[i]*10**(digits-1)))
+        if ((year+1) % 10 == 0) and (i < len(rws)-1):
+          f.write(line + "\r\n")
+          line = "%-6s  %4d" % (name, year+1)
 
       f.write(line + "\r\n")

@@ -14,12 +14,14 @@ class Sample(object):
     self.name = None
     self.first_year = None
     self.ring_widths = []
+    self.oiginal_first_year = None
 
 
   def from_tuple(self, t):
     self.name = t[0]
     self.first_year = t[1]
     self.ring_widths += t[2]
+    self.original_first_year = self.first_year
 
 
   @property

@@ -2,15 +2,16 @@
 
 # Copyright 2011 Andria Dawson and Matthew Emmett.  All rights reserved.
 
-# 
-
-import sys, os, os.path, string
+import os
+import os.path
+import string
+import sys
 
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 
 from pydendro.model.stack import Stack
-from pydendro.ui.stack_view import PyDendroStackView #, PyDendroFrozenStackList
+from pydendro.ui.stack_view import PyDendroStackView
 from pydendro.ui.dialogs import PyDendroSaveStacksDialog
 
 import matplotlib
@@ -28,7 +29,13 @@ class PyDendroMainWindow(QMainWindow):
 
     self.hold = False
     self.stack_views = []
-    # self.frozen_stack_list = None
+
+    try:
+      path = os.environ['PYDENDRO']
+    except:
+      path = os.getcwd()
+
+    self.icon_path = os.path.sep.join([ path, 'pydendro', 'icons' ]) + os.path.sep
 
     self.create_menu()
     self.create_main_frame()
@@ -52,25 +59,9 @@ class PyDendroMainWindow(QMainWindow):
     return list(samples)
 
 
-  @property
-  def non_frozen_selected_samples(self):
-    samples = set()
-    for stack_view in self.stack_views:
-      samples |= set(stack_view.selected_samples)
-    for stack_name in self.model.stacks:
-      stack = self.model.get_stack(stack_name)
-      if stack.frozen:
-        samples -= set(self.model.samples_in_stack(stack_name))
-    return list(samples)
-
-
   def update_stacks(self):
     for stack_view in self.stack_views:
       stack_view.update()
-
-    # if self.frozen_stack_list:
-    #   self.frozen_stack_list.update()
-
 
   ##
   ## actions
@@ -139,15 +130,14 @@ class PyDendroMainWindow(QMainWindow):
 
   def on_pick(self, event):
     """Pick a transect."""
+
+    self.hold = True
     
     line = event.artist
     sample_name = line.get_label()
 
-    self.hold = True
-
     for stack_view in self.stack_views:
       for item in stack_view.sample_list.findItems(sample_name, Qt.MatchExactly):
-        # XXX: depending on keys currently pressed?        
         selected = not stack_view.sample_list.isItemSelected(item)
         stack_view.sample_list.setItemSelected(item, selected)
 
@@ -158,21 +148,28 @@ class PyDendroMainWindow(QMainWindow):
   def on_move_left(self):
     """Move selected sample(s) to the left."""
     
-    for sample in self.non_frozen_selected_samples:
+    for sample in self.selected_samples:
       s = self.model.get_sample(sample)
       s.first_year -= 1
 
     self.on_draw()
 
+    for stack_view in self.stack_views:
+      stack_view.update_samples()
+
+
 
   def on_move_right(self):
     """Move selected sample(s) to the right."""
     
-    for sample in self.non_frozen_selected_samples:
+    for sample in self.selected_samples:
       s = self.model.get_sample(sample)
       s.first_year += 1
 
     self.on_draw()
+
+    for stack_view in self.stack_views:
+      stack_view.update_samples()
 
 
   def on_draw(self):
@@ -183,54 +180,38 @@ class PyDendroMainWindow(QMainWindow):
 
     self.axes.clear()    
 
-    # get list of selected stacks
     # XXX: don't plot the same sample more than once!
 
-    if self.plot_stacks.isChecked():
-      for stack_view in self.stack_views:
-        selected_stacks  = stack_view.selected_stacks
-        selected_samples = stack_view.selected_samples
+    for stack_view in self.stack_views:
+      selected_stacks  = stack_view.selected_stacks
+      selected_samples = stack_view.selected_samples
 
-        color = stack_view.color.getRgbF()
+      color = stack_view.color.getRgbF()
 
-        for stack in selected_stacks:
-          samples = self.model.samples_in_stack(stack)
+      for stack in selected_stacks:
+        samples = stack_view.filter(self.model.samples_in_stack(stack))
 
-          for sample in samples:
-            if sample not in selected_samples:
-              s = self.model.get_sample(sample)
-              self.axes.plot(s.years, s.ring_widths, '-', color=color,
-                             picker=5, label=sample)
+        for sample in samples:
+          if sample not in selected_samples:
+            s = self.model.get_sample(sample)
+            self.axes.plot(s.years, s.ring_widths, '-', color=color,
+                           picker=5, label=sample)
 
-          for sample in samples:
-            if sample in selected_samples:
-              s = self.model.get_sample(sample)
-              self.axes.plot(s.years, s.ring_widths, '.-r',
-                             linewidth=2, picker=10, label=sample)
-    else:
-      for stack_view in self.stack_views:
-        selected_stacks  = stack_view.selected_stacks
-        selected_samples = stack_view.selected_samples        
+        for sample in samples:
+          if sample in selected_samples:
+            s = self.model.get_sample(sample)
+            self.axes.plot(s.years, s.ring_widths, '.-r',
+                           linewidth=2, picker=10, label=sample)
 
-        color = stack_view.color.getRgbF()
-
-        for stack in selected_stacks:
-          samples = self.model.samples_in_stack(stack)
-
-          for sample in samples:
-            if sample in selected_samples:
-              s = self.model.get_sample(sample)
-              self.axes.plot(s.years, s.ring_widths, '-', color=color,
-                             picker=5, label=sample)
-
-      
-    
+    self.axes.xaxis.grid(color='gray')#, linestyle='dashed')
+    self.axes.yaxis.grid(color='gray')#, linestyle='dashed')    
     self.canvas.draw()
 
 
   def on_plot_stacks_toggled(self, checked):
     """Trigger redraw."""
 
+    self.moveable_stacks = set()
     self.on_draw()
 
 
@@ -240,11 +221,6 @@ class PyDendroMainWindow(QMainWindow):
 
   def add_stack_view(self):
     """Add a new stack view."""
-
-    # # frozen stack list
-    # if not self.frozen_stack_list:
-    #   self.frozen_stack_list = PyDendroFrozenStackList(self, self.model)    
-    #   self.addDockWidget(Qt.LeftDockWidgetArea, self.frozen_stack_list)
 
     dock = PyDendroStackView(self, self.model)    
     self.addDockWidget(Qt.LeftDockWidgetArea, dock)
@@ -257,20 +233,6 @@ class PyDendroMainWindow(QMainWindow):
     # plot window
     vbox = QVBoxLayout()
 
-    hbox = QHBoxLayout()
-    hbox.addWidget(QLabel("Plot:"))
-
-    self.plot_stacks = QRadioButton("entire stack")
-    self.plot_stacks.toggle()
-    self.connect(self.plot_stacks, SIGNAL('toggled(bool)'), self.on_plot_stacks_toggled)
-
-    self.plot_samples = QRadioButton("selected samples")
-
-    hbox.addWidget(self.plot_stacks)
-    hbox.addWidget(self.plot_samples)
-    hbox.addStretch()
-    vbox.addLayout(hbox)
-    
     plot_frame = QWidget()
     fig = Figure((5.0, 4.0), dpi=100)
     self.canvas = FigureCanvas(fig)
@@ -297,11 +259,11 @@ class PyDendroMainWindow(QMainWindow):
     """Create tool bar."""
 
     left_action = self.create_action(
-      "Move left", shortcut="-", icon="pydendro/icons/left.png",
+      "Move left", shortcut="-", icon=self.icon_path+"left.png",
       slot=self.on_move_left, tip="Move selected sample(s) to the left")
 
     right_action = self.create_action(
-      "Move right", shortcut="=", icon="pydendro/icons/right.png",
+      "Move right", shortcut="=", icon=self.icon_path+"right.png",
       slot=self.on_move_right, tip="Move selected sample(s) to the right")
 
     self.tool_bar = self.addToolBar("Main toolbar")
