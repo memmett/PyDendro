@@ -19,7 +19,7 @@ while sample != 'done':
             sys.stdout.write('\n')
     sys.stdout.write('\n')
 
-    sample = raw_input('Rotate samples (or "done" to exit): ')
+    sample = raw_input('Rotate samples (space separated list, or "done" to exit): ')
     samples = sample.split()
 
     if 'done' in samples:
