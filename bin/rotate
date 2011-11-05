@@ -9,12 +9,17 @@ working_file = raw_input('Working file (will be overwritten): ')
 
 sample = 'null'
 while sample != 'done':
-    d = transform(read(working_file), kind='dictionary', key='enumerated')
+    try:
+        d = transform(read(working_file), kind='dictionary', key='enumerated')
+    except IOError:
+        print 'Unable to open working file "%s", exiting.' % working_file
+        print ''
+        raise SystemExit
 
     print ''
-    print 'Samples:'
+    print 'Samples (end year shown beside each sample):'
     for k in sorted(d.keys()):
-        sys.stdout.write(' %3d: %4d %-8s' % (k, d[k][1], d[k][0]))
+        sys.stdout.write(' %3d: %4d %-8s' % (k, d[k][1]+len(d[k][2])-1, d[k][0]))
         if (k+1) % 4 == 0:
             sys.stdout.write('\n')
     sys.stdout.write('\n')
