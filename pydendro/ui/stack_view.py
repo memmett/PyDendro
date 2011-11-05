@@ -24,13 +24,11 @@ class PyDendroSampleList(QListWidget):
 
 class PyDendroStackView(QDockWidget):
 
-  # XXX: need to "disable" when no longer visible: remove from ui's list?
-
   def __init__(self, ui, model):
 
     super(QDockWidget, self).__init__(ui)
 
-    self.filtered = False
+    self.hold = False
 
     self.ui = ui
     self.model = model
@@ -43,9 +41,15 @@ class PyDendroStackView(QDockWidget):
     self.create_stack_view()
 
 
+  def closeEvent(self, ev):
+    super(QDockWidget, self).closeEvent(ev)
+    self.ui.delete_stack_view(self)
+
+
   @property
   def selected_stacks(self):
     return [str(item.text(0)) for item in self.stack_list.selectedItems()]
+
 
   @property
   def selected_samples(self):
@@ -82,10 +86,6 @@ class PyDendroStackView(QDockWidget):
         if not self.model.get_stack(stack).immutable:
           self.destination_combo.addItem(stack)
           
-#       stack = self.model.get_stack(stack)
-#       state = 2 if stack.frozen else 0
-#       self.stack_items[stack.name].setCheckState(1, state)
-
     self.stacks = new_stacks
 
 
@@ -122,19 +122,6 @@ class PyDendroStackView(QDockWidget):
     self.ui.on_draw()
 
 
-#   def on_stack_changed(self, item, column):
-
-#     # XXX: this gets fired when a new stack window is created, and it messes things up
-
-#     try:
-#       stack = self.model.get_stack(str(item.text(0)))
-# #      stack.frozen = item.checkState(1) > 0
-#     except:
-#       pass
-
-#     self.ui.update_stacks()
-
-
   def on_sample_selection(self):
     self.ui.on_draw()
 
@@ -150,22 +137,22 @@ class PyDendroStackView(QDockWidget):
 
   def filter(self, samples):
     
-    if self.filtered:
+    if self.hold:
       return list(set(samples) & self._filter)
 
     return samples
 
 
-  def on_filter(self):
+  def on_hold(self):
     """Hold/release action."""
 
-    if self.filtered:
-      self.filtered = False
-      self.filter_button.setText('Hold')
+    if self.hold:
+      self.hold = False
+      self.hold_button.setText('Hold')
       self._filter = set()
     else:
-      self.filtered = True
-      self.filter_button.setText('Release')
+      self.hold = True
+      self.hold_button.setText('Release')
       self._filter = set(self.selected_samples)
 
     self.update_samples()
@@ -246,9 +233,9 @@ class PyDendroStackView(QDockWidget):
     vbox  = QVBoxLayout()
 
     # filter button
-    self.filter_button = QPushButton("Hold")
-    vbox.addWidget(self.filter_button)
-    self.connect(self.filter_button, SIGNAL("clicked()"), self.on_filter)
+    self.hold_button = QPushButton("Hold")
+    vbox.addWidget(self.hold_button)
+    self.connect(self.hold_button, SIGNAL("clicked()"), self.on_hold)
 
     # sample list
     self.sample_list = PyDendroSampleList()    

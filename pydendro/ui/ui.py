@@ -10,7 +10,7 @@ import sys
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 
-from pydendro.model.stack import Stack
+from pydendro.stack import Stack
 from pydendro.ui.stack_view import PyDendroStackView
 from pydendro.ui.dialogs import PyDendroSaveStacksDialog
 
@@ -35,7 +35,7 @@ class PyDendroMainWindow(QMainWindow):
     except:
       path = os.getcwd()
 
-    self.icon_path = os.path.sep.join([ path, 'pydendro', 'icons' ]) + os.path.sep
+    self.icon_path = os.path.sep.join([ path, 'pydendro', 'ui', 'icons' ]) + os.path.sep
 
     self.create_menu()
     self.create_main_frame()
@@ -62,6 +62,11 @@ class PyDendroMainWindow(QMainWindow):
   def update_stacks(self):
     for stack_view in self.stack_views:
       stack_view.update()
+
+  def delete_stack_view(self, stack_view):
+    self.stack_views.remove(stack_view)
+    self.update_stacks()
+    self.on_draw()
 
   ##
   ## actions
@@ -225,6 +230,7 @@ class PyDendroMainWindow(QMainWindow):
     dock = PyDendroStackView(self, self.model)    
     self.addDockWidget(Qt.LeftDockWidgetArea, dock)
     self.stack_views.append(dock)
+    #dock.index = len(self.stack_views)-1
 
 
   def create_main_frame(self):

@@ -2,10 +2,9 @@
 
 import os, os.path, string
 
-import rwl
-
-from sample import Sample
-from stack import Stack
+from pydendro import rwl
+from pydendro.sample import Sample
+from pydendro.stack import Stack
 
 # special stacks: master, working
 # flags: done, frozen
