@@ -1,0 +1,44 @@
+#!/usr/bin/env python
+
+import sys
+
+from pydendro.rwl import read, write, transform
+
+print ''
+working_file = raw_input('Working file (will be overwritten): ')
+
+sample = 'null'
+while sample != 'done':
+    d = transform(read(working_file), kind='dictionary', key='enumerated')
+
+    print ''
+    print 'Samples:'
+    for k in sorted(d.keys()):
+        sys.stdout.write(' %3d: %4d %-8s' % (k, d[k][1], d[k][0]))
+        if (k+1) % 4 == 0:
+            sys.stdout.write('\n')
+    sys.stdout.write('\n')
+
+    sample = raw_input('Rotate samples (or "done" to exit): ')
+    samples = sample.split()
+
+    if 'done' in samples:
+        continue
+
+    try:
+        rotate = int(raw_input('How many years? '))
+    except:
+        print 'Huh?'
+        continue
+    
+    for sample in samples:
+        try:
+            d[int(sample)][1] += rotate
+            print 'Sample %s rotated.' % d[int(sample)][0]
+        except:
+            print 'Sample %s not found, skipping...' % sample
+
+    write(working_file, d)
+    print 'Working file updated.'
+
+print ''
