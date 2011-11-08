@@ -1,5 +1,7 @@
 # taken from from matploblib.widgets.
 
+# XXX: need to put their copyright notice in...
+
 from matplotlib.pylab import searchsorted
 
 class Cursor:
