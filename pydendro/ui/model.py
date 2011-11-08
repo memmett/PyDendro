@@ -25,13 +25,29 @@ class PyDendroModel(object):
   def add_stack(self, stack):
     """Add a new stack object."""
     
-    self._stacks[stack.name] = stack
+    if stack.name not in self._stacks and stack.name != 'TRASH':
+      self._stacks[stack.name] = stack
+    else:
+      raise ValueError('stack already exists')
+
+
+  def rename_stack(self, old, new):
+    """Rename a stack."""
+    
+    if new not in self._stacks and new != 'TRASH':
+      try:
+        self._stacks[new] = self._stacks[old]
+        del self._stacks[old]
+      except:
+        pass
+    else:
+      raise ValueError('stack already exists')
 
 
   def add_sample(self, sample):
     """Add a new sample object."""
     
-    self._samples[sample.name] = stack
+    self._samples[sample.name] = sample
 
 
   @property
@@ -69,6 +85,15 @@ class PyDendroModel(object):
   def move_sample(self, source, sample, destination):
     """Move sample from source stack to destination stack."""
 
+    if destination == 'TRASH':
+      try:
+        src = self._stacks[source]
+        src.remove_sample(sample)
+      except:
+        pass
+
+      return
+
     try:
       src = self._stacks[source]
       dst = self._stacks[destination]
@@ -89,12 +114,23 @@ class PyDendroModel(object):
       pass
 
 
+  # def delete_sample(self, source, sample, destination):
+  #   """Copy sample from source stack to destination stack."""
+    
+  #   try:
+  #     src = self._stacks[source]
+  #     src.remove_sample(sample)
+  #   except:
+  #     pass
+
+
   def add_stack_from_rwl(self, filename):
     """Create a new from an RWL file."""
     
     stack_name = string.split(os.path.basename(filename), '.')[0]
 
     # check stack name
+    # XXX
     if stack_name in self._stacks:
       self.ui.warning("Duplicate stack",
                       "Stack %s already exists.  Skipping import." % stack_name)
@@ -108,11 +144,11 @@ class PyDendroModel(object):
       samples.append(sample)
 
     # check samples
+    # XXX
     for sample in samples:
       if str(sample) in self._samples:
         self.ui.warning("Duplicate sample",
-                        "Sample %s already exists.  Skipping import." % str(sample))
-        return
+                        "Sample %s already exists, replacing." % str(sample))
 
     # add samples
     for sample in samples:
@@ -125,7 +161,3 @@ class PyDendroModel(object):
     self.add_stack(stack)
 
     return stack
-
-
-  
-    

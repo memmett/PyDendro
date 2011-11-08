@@ -8,23 +8,26 @@ from PyQt4.QtGui import *
 
 class PyDendroRenameStackDialog(QDialog):
 
-  def __init__(self, **kwargs):
+  def __init__(self, parent, ui, model):
 
-    super(QDialog, self).__init__(**kwargs)
+    super(QDialog, self).__init__(parent)
+
+    self.ui = ui
+    self.model = model
 
     self.setWindowTitle("Rename stack")
 
     vbox = QVBoxLayout()
-
     vbox.addWidget(QLabel("Rename stack"))
 
     hbox = QHBoxLayout()
 
     hbox.addWidget(QLabel("Rename "))
     self.stack_combo = QComboBox()
-    #self.stack_combo.addItems(["Move to", "Copy to"])
-    hbox.addWidget(self.stack_combo)
+    for stack in self.model.stacks:
+      self.stack_combo.addItem(stack)
 
+    hbox.addWidget(self.stack_combo)
     hbox.addWidget(QLabel(" to "))
 
     self.new_name_input = QLineEdit()
@@ -33,19 +36,31 @@ class PyDendroRenameStackDialog(QDialog):
     vbox.addLayout(hbox)
 
 
-    hbox = QHBoxLayout()
+    bbox = QDialogButtonBox()
+    bbox.addButton(QDialogButtonBox.Ok)
+    bbox.addButton(QDialogButtonBox.Cancel)
+    self.connect(bbox, SIGNAL("accepted()"), self.on_accepted)    
+    self.connect(bbox, SIGNAL("rejected()"), self.on_rejected)
 
-    self.ok_button = QPushButton("OK")
-    self.ok_button.setDefault(True)
-    self.cancel_button = QPushButton("Cancel")
-
-    hbox.addWidget(self.ok_button)
-    hbox.addWidget(self.cancel_button)
-
-    vbox.addLayout(hbox)
+    vbox.addWidget(bbox)
 
     self.setLayout(vbox)
-    self.exec_()
+
+  def on_accepted(self):
+
+    old_name = str(self.stack_combo.currentText())
+    new_name = str(self.new_name_input.text())
+    
+    stack = self.model.rename_stack(old_name, new_name)
+    self.ui.update_stacks()
+
+    self.accept()
+
+
+  def on_rejected(self):
+
+    self.reject()
+    
 
 
 class PyDendroSaveStacksDialog(QDialog):

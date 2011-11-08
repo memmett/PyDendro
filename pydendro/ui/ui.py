@@ -12,7 +12,7 @@ from PyQt4.QtGui import *
 
 from pydendro.stack import Stack
 from pydendro.ui.stack_view import PyDendroStackView
-from pydendro.ui.dialogs import PyDendroSaveStacksDialog, PyDendroNormalizationDialog
+from pydendro.ui.dialogs import PyDendroRenameStackDialog, PyDendroSaveStacksDialog, PyDendroNormalizationDialog
 
 import matplotlib
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
@@ -65,10 +65,12 @@ class PyDendroMainWindow(QMainWindow):
     for stack_view in self.stack_views:
       stack_view.update()
 
+
   def delete_stack_view(self, stack_view):
     self.stack_views.remove(stack_view)
     self.update_stacks()
     self.on_draw()
+
 
   ##
   ## actions
@@ -128,15 +130,19 @@ class PyDendroMainWindow(QMainWindow):
     new_stack, ok = QInputDialog.getText(self, "New stack", "New stack name")
 
     if ok:
-      stack = Stack(str(new_stack), False)
-      self.model.add_stack(stack)
-      self.update_stacks()
+      try:
+        stack = Stack(str(new_stack), False)
+        self.model.add_stack(stack)
+        self.update_stacks()
+      except:
+        pass
 
 
   def on_rename_stack(self):
     """Rename stack dialog."""    
     
-    stack, new_name = PyDendroDialog.renameStack(self)
+    dialog = PyDendroRenameStackDialog(self, self, self.model)
+    dialog.exec_()
 
 
   def on_new_stack_view(self):

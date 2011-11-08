@@ -48,7 +48,8 @@ class PyDendroStackView(QDockWidget):
 
   @property
   def selected_stacks(self):
-    return [str(item.text(0)) for item in self.stack_list.selectedItems()]
+    # return [str(item.text(0)) for item in self.stack_list.selectedItems()]
+    return [str(item.text()) for item in self.stack_list.selectedItems()]    
 
 
   @property
@@ -73,19 +74,25 @@ class PyDendroStackView(QDockWidget):
   def update_stacks(self):
     """Update stack list."""
     
+    old_stacks = self.stacks
     new_stacks = set()
     
     for stack in self.model.stacks:
       new_stacks.add(stack)
       if stack not in self.stacks:
         self.stacks.add(stack)
-        self.stack_items[stack] = QTreeWidgetItem(self.stack_list)
-        self.stack_items[stack].setText(0, stack)
-        self.stack_list.addTopLevelItem(self.stack_items[stack])
-
-        if not self.model.get_stack(stack).immutable:
-          self.destination_combo.addItem(stack)
+        # self.stack_items[stack] = QTreeWidgetItem(self.stack_list)
+        # self.stack_items[stack].setText(0, stack)
+        # self.stack_list.addTopLevelItem(self.stack_items[stack])
+        self.stack_items[stack] = QListWidgetItem(self.stack_list)
+        self.stack_items[stack].setText(stack)
+        self.stack_list.addItem(self.stack_items[stack])
+        # if not self.model.get_stack(stack).immutable:
+        self.destination_combo.addItem(stack)
           
+    for stack in (old_stacks - new_stacks):
+      self.stack_list.takeItem(self.stack_list.row(self.stack_items[stack]))
+
     self.stacks = new_stacks
 
 
@@ -168,6 +175,8 @@ class PyDendroStackView(QDockWidget):
       action = self.model.move_sample
     elif action == "Copy to":
       action = self.model.copy_sample
+    # elif action == "Delete":
+    #   action = self.model.delete_sample
     else:
       return
 
@@ -195,14 +204,15 @@ class PyDendroStackView(QDockWidget):
     vbox  = QVBoxLayout()
 
     # stack list
-    self.stack_list = QTreeWidget(rootIsDecorated=False,
-                                  allColumnsShowFocus=True,
-                                  uniformRowHeights=True,
-                                  sortingEnabled=True,
-                                  )
+    # self.stack_list = QTreeWidget(rootIsDecorated=False,
+    #                               allColumnsShowFocus=True,
+    #                               uniformRowHeights=True,
+    #                               sortingEnabled=True,
+    #                               )
+    self.stack_list = QListWidget()
     self.stack_list.setSelectionMode(QAbstractItemView.ExtendedSelection)
-    self.stack_list.setColumnCount(1)
-    self.stack_list.setHeaderLabels(['Stack'])
+    # self.stack_list.setColumnCount(1)
+    # self.stack_list.setHeaderLabels(['Stack'])
     self.connect(self.stack_list, SIGNAL('itemSelectionChanged()'), self.on_stack_selection)
 
     vbox.addWidget(self.stack_list)
@@ -249,10 +259,11 @@ class PyDendroStackView(QDockWidget):
     hbox = QHBoxLayout()
 
     self.action_combo = QComboBox()
-    self.action_combo.addItems(["Move to", "Copy to"])
+    self.action_combo.addItems(["Move to", "Copy to"]) #, "Delete"])
     hbox.addWidget(self.action_combo)
 
     self.destination_combo = QComboBox()
+    self.destination_combo.addItem('TRASH')
     hbox.addWidget(self.destination_combo)
 
     commit_button = QPushButton("Commit")
