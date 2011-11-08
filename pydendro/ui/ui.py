@@ -35,6 +35,8 @@ class PyDendroMainWindow(QMainWindow):
     except:
       path = os.getcwd()
 
+    self.working_directory = os.getcwd()
+
     self.icon_path = os.path.sep.join([ path, 'pydendro', 'ui', 'icons' ]) + os.path.sep
 
     self.create_menu()
@@ -79,11 +81,22 @@ class PyDendroMainWindow(QMainWindow):
     QMessageBox.about(self, "About PyDendro", msg.strip())
 
 
+  def on_set_directory(self):
+
+    directory = str(QFileDialog.getExistingDirectory(
+      parent=self, caption="Select working directory",
+      directory=self.working_directory))
+
+    if directory:
+      self.working_directory = directory
+
+
   def on_import_rwl(self):
     """Import RWL dialog."""
 
     filename = str(QFileDialog.getOpenFileName(
-      parent=self, caption="Import samples from RWL file"))
+      parent=self, caption="Import samples from RWL file",
+      directory=self.working_directory))
 
     if filename:
       stack = self.model.add_stack_from_rwl(filename)
@@ -289,6 +302,10 @@ class PyDendroMainWindow(QMainWindow):
     # file menu
     self.file_menu = self.menuBar().addMenu("&File")
 
+    set_directory_action = self.create_action(
+      "Set working &directory...", shortcut="Ctrl+D",
+      slot=self.on_set_directory, tip="Set the working directory")
+
     import_rwl_action = self.create_action(
       "&Import RWL...", shortcut="Ctrl+I",
       slot=self.on_import_rwl, tip="Import samples from an RWL file")
@@ -306,7 +323,7 @@ class PyDendroMainWindow(QMainWindow):
       slot=self.close, tip="Close the application")
     
     self.add_actions(self.file_menu, 
-      (import_rwl_action, save_stacks_action, save_plot_action, None, quit_action))
+      (set_directory_action, import_rwl_action, save_stacks_action, save_plot_action, None, quit_action))
 
     # stacks menu
     self.stacks_menu = self.menuBar().addMenu("&Stacks")

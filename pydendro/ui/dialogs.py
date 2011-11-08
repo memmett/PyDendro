@@ -74,7 +74,7 @@ class PyDendroSaveStacksDialog(QDialog):
 
     self.directory_button = QPushButton("Choose")
     self.connect(self.directory_button, SIGNAL("clicked()"), self.on_set_directory)
-    self.directory = QLineEdit(os.getcwd())
+    self.directory = QLineEdit(self.ui.working_directory)
     self.directory.setFixedWidth(400)
 
     hbox = QHBoxLayout()
@@ -134,7 +134,8 @@ class PyDendroSaveStacksDialog(QDialog):
   def on_set_directory(self):
 
     directory = str(QFileDialog.getExistingDirectory(
-      parent=self, caption="Select working directory"))
+      parent=self, caption="Select working directory",
+      directory=str(self.directory.text())))
 
     if directory:
       self.directory.setText(directory)
