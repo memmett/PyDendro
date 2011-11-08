@@ -17,6 +17,8 @@ from pydendro.ui.dialogs import PyDendroRenameStackDialog, PyDendroSaveStacksDia
 import matplotlib
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt4agg import NavigationToolbar2QTAgg as NavigationToolbar
+#from matplotlib.widgets import Cursor
+from pydendro.ui.cursor import Cursor
 from matplotlib.figure import Figure
 
 
@@ -208,7 +210,10 @@ class PyDendroMainWindow(QMainWindow):
     if self.hold:
       return
 
-    self.axes.clear()    
+    self.axes.clear()
+
+    ymin = 9999
+    ymax = 0
 
     # XXX: don't plot the same sample more than once!
 
@@ -227,12 +232,35 @@ class PyDendroMainWindow(QMainWindow):
             self.axes.plot(s.years, s.ring_widths, '-', color=color,
                            picker=5, label=sample)
 
+            if max(s.years) > ymax:
+              ymax = max(s.years)
+
+            if min(s.years) < ymin:
+              ymin = min(s.years)
+
         for sample in samples:
           if sample in selected_samples:
             s = self.model.get_sample(sample)
             self.axes.plot(s.years, s.ring_widths, '.-r',
                            linewidth=2, picker=10, label=sample)
 
+            if max(s.years) > ymax:
+              ymax = max(s.years)
+
+            if min(s.years) < ymin:
+              ymin = min(s.years)
+
+
+    ymin = (ymin/10)*10
+    ymax = (ymax/10+1)*10
+
+    try:
+      xlim = self.axes.get_xlim()
+      self.cursor.x = range(int(xlim[0]), int(xlim[1])+1)
+    except:
+      pass
+
+    # self.axes.set_xlim([ymin, ymax])
     self.axes.xaxis.grid(color='gray')#, linestyle='dashed')
     self.axes.yaxis.grid(color='gray')#, linestyle='dashed')    
     self.canvas.draw()
@@ -269,6 +297,7 @@ class PyDendroMainWindow(QMainWindow):
     self.canvas = FigureCanvas(fig)
     self.canvas.setParent(plot_frame)
     self.axes = fig.add_subplot(111,axis_bgcolor=(1.0, 1.0, 1.0, 1.0))
+    self.cursor = Cursor(self.axes, color='black', useblit=True)
     self.canvas.mpl_connect('pick_event', self.on_pick)
     vbox.addWidget(self.canvas)
 
