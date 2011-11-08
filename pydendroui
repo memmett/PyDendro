@@ -1,0 +1,5 @@
+#!/bin/sh
+
+export PYDENDRO=/home/memmett/projects/pydendro
+export PYTHONPATH=$PYDENDRO
+exec python $PYDENDRO/pydendro.py

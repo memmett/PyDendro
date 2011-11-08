@@ -105,6 +105,9 @@ def read(filename):
 
   with open(filename, 'r') as f:
     for l in f:
+      if len(l.strip()) == 0:
+        continue
+
       row = split(l)
 
       if year is None:
