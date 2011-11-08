@@ -185,6 +185,65 @@ class PyDendroSaveStacksDialog(QDialog):
     self.reject()
 
 
+
+
+class PyDendroDeleteStacksDialog(QDialog):
+
+  def __init__(self, parent, ui, model):
+
+    super(QDialog, self).__init__(parent)
+
+    self.ui = ui
+    self.model = model
+
+    self.create_dialog()
+
+
+  def create_dialog(self):
+
+    self.setWindowTitle("Delete stacks")
+    vbox = QVBoxLayout()
+
+    # stacks
+    vbox.addWidget(QLabel("Select stacks to delete:"))
+
+    self.stack_list = QListWidget()
+    self.stack_list.setSelectionMode(QAbstractItemView.ExtendedSelection)
+    
+    for stack in self.model.stacks:
+      item = QListWidgetItem(self.stack_list)
+      item.setText(stack)
+      self.stack_list.addItem(item)
+
+    vbox.addWidget(self.stack_list)
+
+    # button box
+    bbox = QDialogButtonBox()
+    bbox.addButton(QDialogButtonBox.Ok)
+    bbox.addButton(QDialogButtonBox.Cancel)
+    self.connect(bbox, SIGNAL("accepted()"), self.on_accepted)    
+    self.connect(bbox, SIGNAL("rejected()"), self.on_rejected)
+    
+    vbox.addWidget(bbox)
+
+    self.setLayout(vbox)
+
+
+  def on_accepted(self):
+
+    for item in self.stack_list.selectedItems():
+      stack = str(item.text())
+      self.model.remove_stack(stack)
+      
+    self.ui.update_stacks()
+    self.accept()
+
+
+  def on_rejected(self):
+
+    self.reject()
+
+
 class PyDendroNormalizationDialog(QDialog):
 
   def __init__(self, parent, ui, model):

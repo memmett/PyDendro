@@ -31,6 +31,16 @@ class PyDendroModel(object):
       raise ValueError('stack already exists')
 
 
+  def remove_stack(self, stack):
+    """Remove a stack."""
+    
+    if stack != 'TRASH':
+      try:
+        del self._stacks[stack]
+      except:
+        pass
+
+
   def rename_stack(self, old, new):
     """Rename a stack."""
     

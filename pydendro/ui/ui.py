@@ -12,7 +12,7 @@ from PyQt4.QtGui import *
 
 from pydendro.stack import Stack
 from pydendro.ui.stack_view import PyDendroStackView
-from pydendro.ui.dialogs import PyDendroRenameStackDialog, PyDendroSaveStacksDialog, PyDendroNormalizationDialog
+from pydendro.ui.dialogs import *
 
 import matplotlib
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
@@ -138,6 +138,13 @@ class PyDendroMainWindow(QMainWindow):
         self.update_stacks()
       except:
         pass
+
+
+  def on_delete_stacks(self):
+    """Delete stacks dialog."""    
+    
+    dialog = PyDendroDeleteStacksDialog(self, self, self.model)
+    dialog.exec_()
 
 
   def on_rename_stack(self):
@@ -371,12 +378,16 @@ class PyDendroMainWindow(QMainWindow):
       "&New stack...", shortcut="Ctrl+N",
       slot=self.on_new_stack, tip="Create new stack")
 
+    delete_stacks_action = self.create_action(
+      "Delete stacks...",
+      slot=self.on_delete_stacks, tip="Delete stacks")
+
     rename_stack_action = self.create_action(
       "&Rename stack...",
       slot=self.on_rename_stack, tip="Rename a stack")
 
     self.add_actions(self.stacks_menu,
-                     (new_stack_window_action, new_stack_action, rename_stack_action))
+                     (new_stack_window_action, new_stack_action, delete_stacks_action, rename_stack_action))
 
 
     # tools menu
