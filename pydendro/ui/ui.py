@@ -12,7 +12,7 @@ from PyQt4.QtGui import *
 
 from pydendro.stack import Stack
 from pydendro.ui.stack_view import PyDendroStackView
-from pydendro.ui.dialogs import PyDendroSaveStacksDialog
+from pydendro.ui.dialogs import PyDendroSaveStacksDialog, PyDendroNormalizationDialog
 
 import matplotlib
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
@@ -131,6 +131,12 @@ class PyDendroMainWindow(QMainWindow):
     
     self.add_stack_view()
     self.update_stacks()
+
+
+  def on_normalization(self):
+
+    dialog = PyDendroNormalizationDialog(self, self, self.model)
+    dialog.exec_()
 
 
   def on_pick(self, event):
@@ -319,6 +325,17 @@ class PyDendroMainWindow(QMainWindow):
 
     self.add_actions(self.stacks_menu,
                      (new_stack_window_action, new_stack_action, rename_stack_action))
+
+
+    # tools menu
+    self.tools_menu = self.menuBar().addMenu("&Tools")
+
+    normalization_action = self.create_action(
+      "Normali&zation...",
+      slot=self.on_normalization, tip="Configure normalization options")
+
+    self.add_actions(self.tools_menu,
+                     (normalization_action,))
     
     # help menu
     self.help_menu = self.menuBar().addMenu("&Help")

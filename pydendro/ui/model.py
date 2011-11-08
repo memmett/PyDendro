@@ -19,6 +19,8 @@ class PyDendroModel(object):
     self._stacks = {}
     self._samples = {}
 
+    self.normalization = None
+
 
   def add_stack(self, stack):
     """Add a new stack object."""

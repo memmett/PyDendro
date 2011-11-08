@@ -200,7 +200,7 @@ class PyDendroStackView(QDockWidget):
                                   uniformRowHeights=True,
                                   sortingEnabled=True,
                                   )
-    self.stack_list.setSelectionMode(QAbstractItemView.MultiSelection)
+    self.stack_list.setSelectionMode(QAbstractItemView.ExtendedSelection)
     self.stack_list.setColumnCount(1)
     self.stack_list.setHeaderLabels(['Stack'])
     self.connect(self.stack_list, SIGNAL('itemSelectionChanged()'), self.on_stack_selection)
