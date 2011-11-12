@@ -10,12 +10,15 @@ class Cursor:
     the pointer.  You can turn off the hline or vline spectively with
     the attributes
 
-      horizOn =True|False: controls visibility of the horizontal line
-      vertOn =True|False: controls visibility of the horizontal line
+      horizontal = True|False: controls visibility of the horizontal line
+      vertical   = True|False: controls visibility of the horizontal line
 
     And the visibility of the cursor itself with visible attribute
     """
-    def __init__(self, ax, useblit=False, **lineprops):
+    def __init__(self, ax, 
+                 useblit=False, tolerance=0.35,
+                 vertical=True, horizontal=False, 
+                 **lineprops):
         """
         Add a cursor to ax.  If useblit=True, use the backend
         dependent blitting features for faster updates (GTKAgg only
@@ -29,9 +32,10 @@ class Cursor:
         self.canvas.mpl_connect('draw_event', self.clear)
 
         self.visible = True
-        self.horizOn = True
-        self.vertOn = True
+        self.horizontal = horizontal
+        self.vertical = vertical
         self.useblit = useblit
+        self.tolerance = tolerance
 
         self.lineh = ax.axhline(ax.get_ybound()[0], visible=False, **lineprops)
         self.linev = ax.axvline(ax.get_xbound()[0], visible=False, **lineprops)
@@ -64,15 +68,22 @@ class Cursor:
 
         try:
             if self.x[0] <= x and x <= self.x[-1]:
-                indx = searchsorted(self.x, [x])[0]
+                indx = searchsorted(self.x, [x-0.48])[0]
+
                 x = self.x[indx]
+                
+                # if abs(x - self.x[indx]) < self.tolerance:
+                #     x = self.x[indx]
+                #     self.vertical = True
+                # else:
+                #     self.vertical = False
         except:
             x = event.xdata
         
         self.linev.set_xdata((x, x))
         self.lineh.set_ydata((y, y))
-        self.linev.set_visible(self.visible and self.vertOn)
-        self.lineh.set_visible(self.visible and self.horizOn)
+        self.linev.set_visible(self.visible and self.vertical)
+        self.lineh.set_visible(self.visible and self.horizontal)
 
         self._update()
 
