@@ -177,11 +177,10 @@ class PyDendroModel(object):
       samples.append(sample)
 
     # check samples
-    # XXX
-    for sample in samples:
-      if str(sample) in self._samples:
-        self.ui.warning("Duplicate sample",
-                        "Sample %s already exists, replacing." % str(sample))
+    # for sample in samples:
+    #   if str(sample) in self._samples:
+    #     self.ui.warning("Duplicate sample",
+    #                     "Sample %s already exists, replacing." % str(sample))
 
     # add samples
     for sample in samples:
