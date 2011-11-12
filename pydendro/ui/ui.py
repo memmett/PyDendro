@@ -31,6 +31,8 @@ import os.path
 import string
 import sys
 
+import ConfigParser as configparser
+
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 
@@ -59,7 +61,18 @@ class PyDendroMainWindow(QMainWindow):
     except:
       path = os.getcwd()
 
-    self.working_directory = os.getcwd()
+    self.config = configparser.ConfigParser()
+    try:
+      self.config.read(os.path.expanduser('~/.pydendrorc'))
+      self.working_directory = self.config.get('ui', 'working_directory')
+    except:
+      try:
+        self.config.add_section('ui')
+      except:
+        pass
+      self.config.set('ui', 'working_directory', os.getcwd())
+
+    self.working_directory = self.config.get('ui', 'working_directory')
 
     self.icon_path = os.path.sep.join([ path, 'pydendro', 'ui', 'icons' ]) + os.path.sep
 
@@ -115,18 +128,29 @@ class PyDendroMainWindow(QMainWindow):
 
     if directory:
       self.working_directory = directory
+      try:
+        self.config.add_section('ui')
+      except:
+        pass
+
+      self.config.set('ui', 'working_directory', directory)
+      with open(os.path.expanduser('~/.pydendrorc'), 'wb') as configfile:
+        self.config.write(configfile)
 
 
   def on_import_rwl(self):
     """Import RWL dialog."""
 
-    filename = str(QFileDialog.getOpenFileName(
-      parent=self, caption="Import samples from RWL file",
-      directory=self.working_directory))
+    filenames = QFileDialog.getOpenFileNames(
+      self, caption="Import samples from RWL file(s)",
+      directory=self.working_directory)
 
-    if filename:
+    for filename in filenames:
+      filename = str(filename)
       stack = self.model.add_stack_from_rwl(filename)
       self.status_text.setText("Loaded %d samples from %s" % (len(stack.samples), filename))
+
+    if filenames:
       self.update_stacks()
 
 
@@ -326,7 +350,7 @@ class PyDendroMainWindow(QMainWindow):
     self.canvas = FigureCanvas(fig)
     self.canvas.setParent(plot_frame)
     self.axes = fig.add_subplot(111,axis_bgcolor=(1.0, 1.0, 1.0, 1.0))
-    self.cursor = Cursor(self.axes, color='black', useblit=True)
+    self.cursor = Cursor(self.axes, color='grey', useblit=True)
     self.canvas.mpl_connect('pick_event', self.on_pick)
     vbox.addWidget(self.canvas)
 
