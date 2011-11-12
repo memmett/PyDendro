@@ -26,37 +26,43 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-import os
-import sys
+def pydendroui():
 
-try:
-    sys.path.append(os.environ['PYDENDRO'])
-except:
-    pass
+    import os
+    import sys
 
-from pydendro.stack import Stack
-from pydendro.ui.model import PyDendroModel
-from pydendro.ui.ui import PyDendroMainWindow
-from PyQt4.QtGui import QApplication
+    try:
+        sys.path.append(os.environ['PYDENDRO'])
+    except:
+        pass
 
-# create application, model and form
-app   = QApplication(sys.argv)
-model = PyDendroModel()
-ui    = PyDendroMainWindow()
+    from pydendro.stack import Stack
+    from pydendro.ui.model import PyDendroModel
+    from pydendro.ui.ui import PyDendroMainWindow
+    from PyQt4.QtGui import QApplication
 
-model.ui = ui
-ui.model = model
+    # create application, model and form
+    app   = QApplication(sys.argv)
+    model = PyDendroModel()
+    ui    = PyDendroMainWindow()
 
-# add default stacks
-stack = Stack('MASTER', False)
-model.add_stack(stack)
+    model.ui = ui
+    ui.model = model
 
-stack = Stack('WORKING', False)
-model.add_stack(stack)
+    # add default stacks
+    stack = Stack('MASTER', False)
+    model.add_stack(stack)
 
-ui.add_stack_view()
-ui.update_stacks()
+    stack = Stack('WORKING', False)
+    model.add_stack(stack)
 
-# fire up the ui
-ui.show()
-app.exec_()
+    ui.add_stack_view()
+    ui.update_stacks()
+
+    # fire up the ui
+    ui.show()
+    app.exec_()
+
+
+if __name__ == '__main__':
+    pydendroui()
