@@ -1,5 +1,6 @@
 """PyDendro routines for manipulating RWL files."""
-# Copyright (c) 2011, Matthew Emmett.  All rights reserved.
+
+# Copyright (c) 2011, 2012, Matthew Emmett.  All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions
@@ -121,6 +122,7 @@ def read(filename, broken_end=False, digits=None):
         widths = []
 
   return samples
+
 
 def write(filename, samples, sort=True, key=None, digits=4):
   """Write samples..."""

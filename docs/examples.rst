@@ -38,9 +38,8 @@ PyDendro also comes with a graphical user interface to load ring
 widths from multiple sources, plot the ring widths and shift them
 through time, move samples between stacks, and save the results.
 
-To run the UI, you need the PyQt4 bindings and matplotlib.
-
-To start the UI, run the ``pydendroui`` script.
+To run the UI, you need the PyQt4 and matplotlib Python packages.  To
+start the UI, run the ``pydendroui`` script.
 
 Here is a quick screen shot:
 
