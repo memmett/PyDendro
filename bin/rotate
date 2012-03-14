@@ -30,7 +30,20 @@
 
 import sys
 
-from pydendro.rwl import read, write, transform
+from pydendro.rwl import read, write
+
+def sort_trans_tree_core(sample):
+
+  name = sample.name
+  site = name[0:3]
+  tree = name[3:5]
+  last = name[5:]
+
+  try:
+    return (site, int(tree), last.upper())
+  except:
+    raise Exception('Unable to create key from: %s, %s, %s' % (site, tree, last))
+
 
 print ''
 working_file = raw_input('Working file (will be overwritten): ')
@@ -38,7 +51,9 @@ working_file = raw_input('Working file (will be overwritten): ')
 sample = 'null'
 while sample != 'done':
     try:
-        d = transform(read(working_file), kind='dictionary', key='enumerated')
+        d = {}
+        for k, v in enumerate(read(working_file)):
+            d[k] = v
     except IOError:
         print 'Unable to open working file "%s", exiting.' % working_file
         print ''
@@ -47,7 +62,8 @@ while sample != 'done':
     print ''
     print 'Samples (end year shown beside each sample):'
     for k in sorted(d.keys()):
-        sys.stdout.write(' %3d: %-8s %4d' % (k, d[k][0], d[k][1]+len(d[k][2])-1))
+        sys.stdout.write(
+            ' %3d: %-8s %4d' % (k, d[k].name, d[k].fyog+len(d[k].widths)-1))
         if (k+1) % 4 == 0:
             sys.stdout.write('\n')
     sys.stdout.write('\n')
@@ -66,12 +82,15 @@ while sample != 'done':
     
     for sample in samples:
         try:
-            d[int(sample)][1] += rotate
-            print 'Sample %s rotated.' % d[int(sample)][0]
+            d[int(sample)].fyog += rotate
+            print 'Sample %s rotated.' % d[int(sample)].name
         except:
             print 'Sample %s not found, skipping...' % sample
 
-    write(working_file, d)
+    l = []
+    for k in sorted(d.iterkeys()):
+        l.append(d[k])
+    write(working_file, l, sort=True, key=sort_trans_tree_core)
     print 'Working file updated.'
 
 print ''
