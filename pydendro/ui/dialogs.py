@@ -228,7 +228,7 @@ class PyDendroSaveStacksDialog(QDialog):
         samples = []
         for sample_name in stack.samples:
           sample = self.model.get_sample(sample_name)
-          samples.append((sample.name, sample.first_year, sample.ring_widths))
+          samples.append(sample.to_plain())
 
         if samples:
           fullname = os.path.join(dirname, str(filename.text()))

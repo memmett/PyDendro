@@ -44,12 +44,19 @@ class Sample(object):
     self.oiginal_first_year = None
 
 
-  def from_tuple(self, t):
-    self.name = t[0]
-    self.first_year = t[1]
-    self.ring_widths += t[2]
+  def from_plain(self, sample):
+    self.name = sample.name
+    self.first_year = sample.fyog
+    self.ring_widths += sample.widths
     self.original_first_year = self.first_year
 
+  def to_plain(self):
+    from rwl import Sample as PlainSample
+    sample = PlainSample
+    sample.name = self.name
+    sample.fyog = self.first_year
+    sample.widths = self.ring_widths
+    return sample
 
   @property
   def years(self):

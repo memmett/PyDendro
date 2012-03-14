@@ -173,7 +173,7 @@ class PyDendroModel(object):
     samples = []
     for s in rwl.read(filename):
       sample = Sample()
-      sample.from_tuple(s)
+      sample.from_plain(s)
       samples.append(sample)
 
     # check samples
