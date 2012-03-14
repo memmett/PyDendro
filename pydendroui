@@ -1,5 +1,7 @@
-#!/bin/sh
+#!/bin/bash
 
-export PYDENDRO=/home/memmett/projects/pydendro
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
+export PYDENDRO=$DIR
 export PYTHONPATH=$PYDENDRO
-exec python $PYDENDRO/pydendro.py
+exec python $PYDENDRO/pydendroui.py
