@@ -30,7 +30,6 @@
 import os
 
 from collections import namedtuple
-from string import split
 from shutil import move
 from tempfile import mkstemp
 
@@ -67,7 +66,7 @@ class Sample(object):
 
 
 def read(filename, broken_end=False, digits=None):
-  """Read RWL file and return list of samples as tuples of (name, fyog, widths)."""
+  """Read RWL file and return list of samples."""
 
   samples      = []
   year         = None
@@ -81,7 +80,7 @@ def read(filename, broken_end=False, digits=None):
       if l[7] != ' ':
         l = l[:8] + ' ' + l[8:]
 
-      row = split(l)
+      row = l.split()
 
       try:
         if year is None:
@@ -128,7 +127,10 @@ def write(filename, samples, sort=True, key=None, digits=4):
   """Write samples..."""
 
   if sort:
-    samples = sorted(samples, key=key)
+    if key is None:
+      samples = sorted(samples, key=lambda x: x.name)
+    else:
+      samples = sorted(samples, key=key)
 
   fd, tmp = mkstemp()
 
