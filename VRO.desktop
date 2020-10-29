@@ -1,0 +1,6 @@
+[Desktop Entry]
+Name=VRO
+Exec=/home/vro/PyDendro/pyvroui
+Icon=/home/vro/PyDendro/leaf-fill.svg
+Terminal=False
+Type=Application
