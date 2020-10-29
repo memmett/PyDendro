@@ -2,6 +2,7 @@
 # Simple GUI to record measurements from VRO
 #
 
+import datetime
 import serial
 import serial.threaded
 import sys
@@ -74,6 +75,9 @@ class VROMainWindow(QMainWindow):
         vbox = QVBoxLayout()
         vbox.addLayout(fbox)
         vbox.addWidget(gbox)
+
+        now = datetime.datetime.now()
+        self.year.setText(str(now.year))
 
         self.centralWidget().setLayout(vbox)
 
