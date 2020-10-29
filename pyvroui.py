@@ -18,7 +18,7 @@ from pathlib import Path as path
 
 top = path(__file__).resolve().parent
 
-class HelloWindow(QMainWindow):
+class VROMainWindow(QMainWindow):
 
     CORE, YEAR, WIDTH, MEASUREMENT = range(4)
     model = None
@@ -197,11 +197,11 @@ def find_vro():
 if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
     app.setApplicationName("VRO")
-    mainWin = HelloWindow()
+    main = VROMainWindow()
     vro_tty = find_vro()
     if vro_tty is not None:
         reader = serial.threaded.ReaderThread(serial.Serial(), VRO)
         reader.start()
-        reader.protocol.set_model(mainWin)
-    mainWin.show()
+        reader.protocol.set_model(main)
+    main.show()
     sys.exit(app.exec_())
