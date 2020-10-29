@@ -19,6 +19,38 @@ from pathlib import Path as path
 
 top = path(__file__).resolve().parent
 
+
+class NewCoreDialog(QDialog):
+
+    def __init__(self, *args, **kwargs):
+        super(NewCoreDialog, self).__init__(*args, **kwargs)
+
+        self.setWindowTitle("New core")
+        self.core = QLineEdit()
+        self.lyog = QLineEdit()
+
+        now = datetime.datetime.now()
+        self.lyog.setText(str(now.year))
+
+        vbox = QVBoxLayout()
+
+        hbox = QHBoxLayout()
+        hbox.addWidget(QLabel("Core name:"))
+        hbox.addWidget(self.core)
+        vbox.addLayout(hbox)
+
+        hbox = QHBoxLayout()
+        hbox.addWidget(QLabel("Last year of growth:"))
+        hbox.addWidget(self.lyog)
+        vbox.addLayout(hbox)
+
+        bbox = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
+        bbox.accepted.connect(self.accept)
+        bbox.rejected.connect(self.reject)
+        vbox.addWidget(bbox)
+
+        self.setLayout(vbox)
+
 class VROMainWindow(QMainWindow):
 
     CORE, YEAR, WIDTH, MEASUREMENT = range(4)
@@ -32,7 +64,7 @@ class VROMainWindow(QMainWindow):
         self.setCentralWidget(QWidget())
 
         self.fileName = QLabel()
-        self.coreName = QLabel()
+        self.core = QLabel()
         self.year = QLineEdit()
         self.measurements = QTableView()
         self.measurements.setAlternatingRowColors(True)
@@ -47,6 +79,8 @@ class VROMainWindow(QMainWindow):
         self.delete_button.clicked.connect(self.delete_rows)
 
         self.new_core_button = QPushButton('New core')
+        self.new_core_button.clicked.connect(self.new_core)
+
         self.delete_core_button = QPushButton('Delete core')
 
         file_group = QGroupBox("File")
@@ -59,7 +93,7 @@ class VROMainWindow(QMainWindow):
 
         core_info_box = QHBoxLayout()
         core_info_box.addWidget(QLabel("Core:"))
-        core_info_box.addWidget(self.coreName)
+        core_info_box.addWidget(self.core)
         core_info_box.addWidget(QLabel("Year:"))
         core_info_box.addWidget(self.year)
 
@@ -113,7 +147,7 @@ class VROMainWindow(QMainWindow):
             current = "0.0"
         else:
             last_core = self.model.item(0, self.CORE).text()
-            current_core = self.coreName.text()
+            current_core = self.core.text()
             if last_core != current_core:
                 current = "0.0"
             else:
@@ -122,7 +156,7 @@ class VROMainWindow(QMainWindow):
         fmt     = "{:.0" + str(digits) + "f}"
         width   = fmt.format(float(value) - float(current))
         self.model.insertRow(0)
-        self.model.setData(self.model.index(0, self.CORE), self.coreName.text())
+        self.model.setData(self.model.index(0, self.CORE), self.core.text())
         self.model.setData(self.model.index(0, self.YEAR), self.year.text())
         self.model.setData(self.model.index(0, self.WIDTH), width)
         self.model.setData(self.model.index(0, self.MEASUREMENT), value)
@@ -185,6 +219,14 @@ class VROMainWindow(QMainWindow):
             self.model.removeRow(i.row())
         self.write()
         self.model.itemChanged.connect(self.on_item_changed)
+
+    def new_core(self):
+        dlg = NewCoreDialog(self)
+        if dlg.exec_():
+            self.core.setText(dlg.core.text())
+            self.year.setText(dlg.lyog.text())
+            core = QListWidgetItem(self.core.text())
+            self.core_list_widget.addItem(core)
 
 
 
