@@ -4,6 +4,7 @@
 
 import collections
 import datetime
+import random
 import serial
 import serial.threaded
 import sys
@@ -64,10 +65,20 @@ class Measurements:
         self.measurements[core].append(Measurement(core, year, width, value))
 
     def remove_core(self, core):
-        del self.measurements[core]
+        if core not in self.measurements:
+            return
+        try:
+            del self.measurements[core]
+        except:
+            pass
 
     def remove_last_measurement(self, core):
-        del self.measurements[core][-1]
+        if core not in self.measurements:
+            return
+        try:
+            del self.measurements[core][-1]
+        except:
+            pass
 
     def write(self, fname):
         data = sum(self.measurements.values(), [])
@@ -208,8 +219,9 @@ class VROMainWindow(QMainWindow):
                 self.model.setData(self.model.index(0, self.YEAR), row.year)
                 self.model.setData(self.model.index(0, self.WIDTH), row.width)
                 self.model.setData(self.model.index(0, self.MEASUREMENT), row.measurement)
-            last = measurements[-1]
-            self.year.setText(str(int(last.year)-1))
+            if measurements:
+                last = measurements[-1]
+                self.year.setText(str(int(last.year)-1))
 
         cores = sorted(self.measurements.measurements.keys())
         selected = self.core_list_widget.selectedItems()
@@ -256,18 +268,23 @@ class VROMainWindow(QMainWindow):
     def new_core(self):
         dlg = NewCoreDialog(self)
         if dlg.exec_():
-            self.core.setText(dlg.core.text())
+            core = dlg.core.text()
+            self.core.setText(core)
             self.year.setText(dlg.lyog.text())
-            core = QListWidgetItem(self.core.text())
-            self.core_list_widget.addItem(core)
+            self.measurements.measurements[core] = []
+            # core = QListWidgetItem(self.core.text())
+            # self.core_list_widget.addItem(core)
+            self.update_measurements()
 
 
     def delete_core(self):
-        c = self.core_list_widget.selectedItems()[0].text()
-        self.core.setText("")
-        self.measurements.remove_core(c)
-        self.write()
-        self.update_measurements()
+        c = self.core_list_widget.selectedItems()
+        if c:
+            c = c[0].text()
+            self.core.setText("")
+            self.measurements.remove_core(c)
+            self.write()
+            self.update_measurements()
 
 
     def core_clicked(self):
@@ -291,10 +308,11 @@ class FakeVRO(threading.Thread):
     def set_model(self, model):
         self.model = model
     def run(self):
-        pass
-        # while True:
-        #     self.model.add_measurement('0.0001', 'mm')
-        #     time.sleep(1)
+        v = 0.0
+        while True:
+            v += random.randrange(1, 10000) / 10000
+            self.model.add_measurement(f'{v:.4f}', 'mm')
+            time.sleep(random.randrange(2, 10))
 
 
 def find_vro():
