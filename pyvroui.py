@@ -308,6 +308,7 @@ class FakeVRO(threading.Thread):
     def set_model(self, model):
         self.model = model
     def run(self):
+        return
         v = 0.0
         while True:
             v += random.randrange(1, 10000) / 10000
@@ -316,7 +317,7 @@ class FakeVRO(threading.Thread):
 
 
 def find_vro():
-    usbs = [ f'/dev/ttyUSB{i}' for i in range(10) ]
+    usbs = [ f'/dev/ttyUSB{i}' for i in range(10) ] + [ f'COM{i}' for i in range(10) ]
     for usb in usbs:
         try:
             with serial.Serial(usb, timeout=2) as s:
@@ -325,22 +326,32 @@ def find_vro():
                 if v in [ 'S', 'D', 'P' ]:
                     return usb
         except Exception as e:
-            pass
+            print(e)
     print('VRO not found!')
 
 
 if __name__ == "__main__":
+    print("Ports...")
+    import serial.tools.list_ports as port_list
+    ports = list(port_list.comports())
+    for p in ports:
+        print (p)
+
     app = QtWidgets.QApplication(sys.argv)
     app.setApplicationName("VRO")
     main = VROMainWindow()
     vro_tty = find_vro()
     if vro_tty is not None:
-        reader = serial.threaded.ReaderThread(serial.Serial(), VRO)
+        reader = serial.threaded.ReaderThread(serial.Serial(vro_tty), VRO)
         reader.start()
         reader.protocol.set_model(main)
+        #with serial.threaded.ReaderThread(serial.Serial(), VRO) as 
+        
     else:
-        reader = FakeVRO()
-        reader.set_model(main)
-        reader.start()
+        msg = QMessageBox.warning(main, "PyVRO - VRO not found", "Unable to find the VRO.  Please plug it in and restart this application.")
+        sys.exit(1)
+        #reader = FakeVRO()
+        #reader.set_model(main)
+        #reader.start()
     main.show()
     sys.exit(app.exec_())
