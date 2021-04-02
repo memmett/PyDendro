@@ -22,6 +22,10 @@ from pathlib import Path as path
 
 top = path(__file__).resolve().parent
 
+sys.path.append(str(top))
+
+import pydendro.csv
+import pydendro.rwl
 
 class NewCoreDialog(QDialog):
 
@@ -85,6 +89,9 @@ class Measurements:
         if data:
             df = pd.DataFrame([x._asdict() for x in data])
             df.to_csv(fname, index=False)
+
+            samples = pydendro.csv.read(fname)
+            pydendro.rwl.write(path(fname).with_suffix('.rwl'), samples)
 
     def load(self, fname):
         data = pd.read_csv(fname, dtype=str)
@@ -308,7 +315,6 @@ class FakeVRO(threading.Thread):
     def set_model(self, model):
         self.model = model
     def run(self):
-        return
         v = 0.0
         while True:
             v += random.randrange(1, 10000) / 10000
