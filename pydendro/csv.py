@@ -16,6 +16,6 @@ def read(filename):
     if not all(deltas == 1):
       print("WARNING: invalid years in sample:", name)
       continue
-    samples.append(Sample(name, fyog, list(srtd['measurement'])))
+    samples.append(Sample(name, fyog, list(srtd['width'])))
 
   return samples
