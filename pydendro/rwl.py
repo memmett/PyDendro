@@ -41,7 +41,7 @@ class Sample(object):
 
   def __repr__(self):
     return 'Sample(' + self.__str__() + ')'
-    
+
 
   def __init__(self, name, fyog, widths):
     self.name = name
@@ -65,60 +65,69 @@ class Sample(object):
     return self.fyog + len(self.widths) - 1
 
 
-def read(filename, broken_end=False, digits=None):
+def read_text(filename):
+  """Read text of file."""
+  lines = []
+  with open(filename, 'r') as f:
+    for line in f:
+      lines.append(line.strip())
+  return lines
+
+
+def read(filename, digits=None, **kwargs):
   """Read RWL file and return list of samples."""
 
   samples      = []
   year         = None
   widths       = []
 
-  with open(filename, 'r') as f:
-    for lineno, l in enumerate(f):
-      if len(l.strip()) == 0:
-        continue
+  lines = read_text(filename)
+  last_lineno = len(lines) - 1
 
-      if l[7] != ' ':
-        l = l[:8] + ' ' + l[8:]
+  for lineno, line in enumerate(lines):
+    if len(line) == 0:
+      continue
 
-      row = l.split()
+    if line[7] != ' ':
+      line = line[:8] + ' ' + line[8:]
 
-      try:
-        if year is None:
-          # only grab name and year firt time around
-          name    = str(row[0])
-          year    = int(row[1])
-      except:
-        raise ValueError("Unable to parse file '%s' near line %d." % (filename, lineno))
+    row = line.split()
 
-       # append ring widths
+    try:
+      if year is None:
+        # only grab name and year first time around
+        name    = str(row[0])
+        year    = int(row[1])
+    except:
+      raise ValueError("Unable to parse file '%s' near line %d." % (filename, lineno+1))
+
+    # append ring widths
+    try:
       widths += map(int, row[2:])
+    except:
+      raise ValueError("Unable to parse file '%s' near line %d." % (filename, lineno+1))
 
-      # are we at the last sample?
-      try:
-        last = int(widths[-1]) < 0 
-      except:
-        raise ValueError("Unable to parse file '%s' near line %d." % (filename, lineno))
+    # are we at the last sample?
+    last = widths[-1] < 0 or lineno == last_lineno
+    if lineno < last_lineno:
+      last = last or not lines[lineno+1].startswith(name)
 
-      if broken_end and (widths[-1] == 999 or widths[-1] == 9999):
-        last = True
-      # XXX: we should really read ahead and check the next lines sample name to figure out if we're at the last line...
+    if last:
 
-      if last:
+      # renormalize
+      if digits:
+        d = digits
+      else:
+        d = len(str(abs(widths[-1])))
+      factor = 10.0**(d-1)
+      widths = map(lambda x: float(x)/factor, widths[:-1])
 
-        # renormalize
-        if digits:
-          d = digits
-        else:
-          d = len(str(abs(widths[-1])))
-        factor = 10.0**(d-1)
-        widths = map(lambda x: float(x)/factor, widths[:-1])
+      # append to list
+      samples.append(Sample(name, year, widths))
 
-        # append to list
-        samples.append(Sample(name, year, widths))
-
-        # reset
-        year   = None
-        widths = []
+      # reset
+      year   = None
+      widths = []
 
   return samples
 
