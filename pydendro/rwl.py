@@ -135,7 +135,8 @@ def write(filename, samples, sort=True, key=None, digits=4):
   fd, tmp = mkstemp()
 
   with os.fdopen(fd, 'w') as f:
-    for name, fyog, rws in samples:
+    for sample in samples:
+      name, fyog, rws = sample.name, sample.fyog, sample.widths
 
       # append marker year
       rws = rws + [ -9999.0/10.0**(digits-1) ]
