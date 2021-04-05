@@ -29,6 +29,95 @@
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 
+class PyDendroSampleEdtior(QDialog):
+
+  def __init__(self, parent, ui, model, sample):
+    super(QDialog, self).__init__(parent)
+    self.ui = ui
+    self.populating = False
+    self.sample = model.get_sample(sample)
+    self.create_dialog()
+    self.populate()
+
+  def create_dialog(self):
+    self.setWindowTitle("Sample editor: " + self.sample.name)
+    self.table = QTableWidget(self)
+    self.table.setColumnCount(2)
+    self.table.setHorizontalHeaderLabels(["Year", "Width"])
+
+    self.delete_button = QPushButton('Delete')
+    self.insert_after_button = QPushButton('Insert after')
+    self.insert_before_button = QPushButton('Insert before')
+
+    self.delete_button.clicked.connect(self.on_delete)
+    self.insert_after_button.clicked.connect(self.on_insert_after)
+    self.insert_before_button.clicked.connect(self.on_insert_before)
+
+    abox = QHBoxLayout()
+    abox.addWidget(self.delete_button)
+    abox.addWidget(self.insert_after_button)
+    abox.addWidget(self.insert_before_button)
+
+    self.connect(self.table, SIGNAL('itemChanged (QTableWidgetItem*)'), self.on_changed)
+
+    bbox = QHBoxLayout()
+    self.close_button = QPushButton('Close')
+    self.close_button.clicked.connect(self.on_accepted)
+    bbox.addWidget(self.close_button)
+
+    vbox = QVBoxLayout()
+    vbox.addWidget(self.table)
+    vbox.addLayout(abox)
+    vbox.addLayout(bbox)
+    self.resize(400, 800)
+    self.setLayout(vbox)
+
+  def populate(self):
+    self.populating = True
+    self.table.setRowCount(self.sample.nyears)
+    for i, width in enumerate(self.sample.ring_widths):
+      year = QTableWidgetItem(str(self.sample.first_year + i))
+      width = QTableWidgetItem(str(width))
+      self.table.setItem(i, 0, year)
+      self.table.setItem(i, 1, width)
+    self.populating = False
+
+
+  def on_changed(self):
+    if not self.populating:
+      row = self.table.currentRow()
+      col = self.table.currentColumn()
+      if col == 1:
+        try:
+          value = float(self.table.item(row, col).text())
+          self.sample.ring_widths[row] = value
+        except:
+          pass
+      self.populate()
+
+  def on_delete(self):
+    idx = self.table.currentRow()
+    del self.sample.ring_widths[idx]
+    self.populate()
+
+
+  def on_insert_after(self):
+    idx = self.table.currentRow()
+    self.sample.ring_widths.insert(idx+1, 0.0)
+    self.populate()
+
+
+  def on_insert_before(self):
+    idx = self.table.currentRow()
+    self.sample.ring_widths.insert(idx, 0.0)
+    self.populate()
+
+
+  def on_accepted(self):
+    self.ui.on_draw()
+    self.accept()
+
+
 class PyDendroSampleListItem(QListWidgetItem):
 
   def __init__(self, name, model):
@@ -160,6 +249,12 @@ class PyDendroStackView(QDockWidget):
     self.ui.on_draw()
 
 
+  def on_sample_double_clicked(self):
+    sample = self.selected_samples[0]
+    dialog = PyDendroSampleEdtior(self, self.ui, self.model, sample)
+    dialog.exec_()
+
+
   def on_change_color(self):
     """Change color dialog."""
     
@@ -279,6 +374,7 @@ class PyDendroStackView(QDockWidget):
     self.sample_list.setSelectionMode(QAbstractItemView.ExtendedSelection)
     self.sample_list.setSortingEnabled(True)
     self.connect(self.sample_list, SIGNAL('itemSelectionChanged()'), self.on_sample_selection)
+    self.connect(self.sample_list, SIGNAL('itemDoubleClicked (QListWidgetItem *)'), self.on_sample_double_clicked)
 
     vbox.addWidget(self.sample_list)
 
