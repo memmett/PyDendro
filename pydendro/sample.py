@@ -64,4 +64,4 @@ class Sample(object):
 
   @property
   def nyears(self):
-    return len(self.right_widths)
+    return len(self.ring_widths)
