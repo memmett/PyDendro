@@ -148,7 +148,7 @@ def write(filename, samples, sort=True, key=None, digits=4):
       name, fyog, rws = sample.name, sample.fyog, sample.widths
 
       # append marker year
-      rws = rws + [ -9999.0/10.0**(digits-1) ]
+      rws = rws + [ 9999.0/10.0**(digits-1) ]
 
       line = "%-6s  %4d" % (name, fyog)
       for i, year in enumerate(range(fyog, fyog+len(rws))):
