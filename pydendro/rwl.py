@@ -143,7 +143,7 @@ def write(filename, samples, sort=True, key=None, digits=4):
 
   fd, tmp = mkstemp()
 
-  with os.fdopen(fd, 'w') as f:
+  with os.fdopen(fd, 'wb') as f:
     for sample in samples:
       name, fyog, rws = sample.name, sample.fyog, sample.widths
 
