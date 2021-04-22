@@ -154,9 +154,9 @@ def write(filename, samples, sort=True, key=None, digits=4):
       for i, year in enumerate(range(fyog, fyog+len(rws))):
         line += "%6d" % int(round(rws[i]*10**(digits-1)))
         if ((year+1) % 10 == 0) and (i < len(rws)-1):
-          f.write(line + "\r\n")
+          f.write((line + "\r\n").encode('ascii'))
           line = "%-6s  %4d" % (name, year+1)
 
-      f.write(line + "\r\n")
+      f.write((line + "\r\n").encode('ascii'))
 
   move(tmp, filename)
