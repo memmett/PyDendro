@@ -260,7 +260,8 @@ class VROMainWindow(QMainWindow):
         if not fname:
             return
 
-        self.file.setText(fname)
+        fname = path(fname).with_suffix('.csv')
+        self.file.setText(str(fname))
         self.core.setText('')
         self.measurements = Measurements()
         self.update_measurements()
